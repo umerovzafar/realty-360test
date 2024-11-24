@@ -4,7 +4,7 @@ import "@/app/styles/globals.css";
 
 import { SessionProvider } from "next-auth/react";
 
-import { auth } from "@/auth";
+import { auth } from "./auth";
 
 import { ThemeProvider } from "@/app/providers/theme-provider";
 
