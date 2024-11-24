@@ -1,14 +1,14 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { signInSchema } from "@/app/(auth)/sign-in/_schemas/sign-in-shema";
+import { signInSchema } from "@/schemas/sign-in-schema";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     CredentialsProvider({
       credentials: {
-        name: { label: "Имя", type: "text" },
-        password: { label: "Пароль", type: "password" },
+        username: { label: "Имя Пользователя", type: "text" },
+        password: { label: "Пароль", type: "text" },
       },
       async authorize(credentials) {
         try {
@@ -18,19 +18,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name === process.env.AUTH_CEO_NAME &&
             password === process.env.AUTH_CEO_PASSWORD
           ) {
-            return { role: "ceo" };
-          }
-
-          if (
+            return { name, role: "ceo" };
+          } else if (
             name === process.env.AUTH_EMPLOYEE_NAME &&
             password === process.env.AUTH_EMPLOYEE_PASSWORD
           ) {
-            return { role: "employee" };
+            return { name, role: "employee" };
           }
 
           return null;
         } catch (error) {
-          throw error;
+          return null;
         }
       },
     }),
@@ -38,19 +36,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: {
     strategy: "jwt",
   },
+
   callbacks: {
-    authorized: ({ auth }) => {
-      return !!auth;
-    },
-    jwt: ({ token, user }) => {
+    async jwt({ token, user }) {
       if (user) {
+        token.name = user.name;
         token.role = user.role;
       }
 
       return token;
     },
-    session: ({ session, token }) => {
-      if (token.role) {
+    async session({ session, token }) {
+      if (token) {
+        session.user.name = token.name;
         session.user.role = token.role;
       }
 

@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { auth } from "@/auth";
 
 const PROTECTED_ROUTES = [
@@ -5,35 +7,33 @@ const PROTECTED_ROUTES = [
   /\/conditions\/\w+/,
   /\/districts\/\w+/,
   /\/floors\/\w+/,
+  /\/types\/\w+/,
   /\/rooms\/\w+/,
   /\/storeys\/\w+/,
-  /\/types\/\w+/,
   /\/real-estate\/\w+/,
 ];
 
 export default auth((req) => {
-  if (req.auth && req.nextUrl.pathname === "/sign-in") {
-    const newUrl = new URL("/", req.nextUrl.origin);
+  const isAuthenticated = !!req.auth;
 
-    return Response.redirect(newUrl);
+  const isAuthPage = req.nextUrl.pathname.startsWith("/sign-in");
+
+  if (isAuthenticated && isAuthPage) {
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
-  if (!req.auth && req.nextUrl.pathname !== "/sign-in") {
-    const newUrl = new URL("/sign-in", req.nextUrl.origin);
-
-    return Response.redirect(newUrl);
+  if (!isAuthenticated && !isAuthPage) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
   if (
-    req.auth &&
-    PROTECTED_ROUTES.some((route) => req.nextUrl.pathname.match(route))
+    PROTECTED_ROUTES.some((pattern) => req.nextUrl.pathname.match(pattern)) &&
+    req.auth?.user?.role === "employee"
   ) {
-    if (req.auth.user?.role !== "ceo") {
-      const newUrl = new URL("/", req.nextUrl.origin);
-
-      return Response.redirect(newUrl);
-    }
+    return NextResponse.redirect(new URL("/", req.url));
   }
+
+  return NextResponse.next();
 });
 
 export const config = {
