@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { signInSchema } from "@/schemas/sign-in-schema";
+import { signInSchema } from "./app/(auth)/sign-in/_schemas/sign-in-shema";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
